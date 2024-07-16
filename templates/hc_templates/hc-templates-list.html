@@ -1,0 +1,191 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}HeadCount Templates List{% endblock title %}
+{% block extra_css %}
+<!--datatable css-->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="HeadCount Templates" title="HeadCount Templates List" %}
+                        {% endblock pagetitle %}
+
+                        {% block alerts %}
+                            {% include "partials/errors.html" with messages=messages %}
+                        {% endblock alerts %}
+    
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card" id="orderList">
+                                    <div class="card-header border-1">
+                                        <div class="row align-items-center gy-3">
+                                            <div class="col-sm">
+                                                <h5 class="card-title mb-0">HeadCount Templates List</h5>
+                                            </div>
+                                            
+                                        </div>
+                                    </div>
+                                    <div class="card-body border border-0 border-end-0 border-start-0">
+                                        <form>
+                                            <div class="row g-3">
+                                                <div class="col-5">
+                                                    <div class="search-box">
+                                                        <input type="text" id="searchBox" class="form-control search"
+                                                            placeholder="Search...">
+                                                        <i class="ri-search-line search-icon"></i>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-sm-auto" style="margin-left:auto;">
+                                                    <div class="d-flex gap-1 flex-wrap">
+                                                        <a type="button" class="btn btn-success add-btn" id="create-template-btn" href="{% url 'apps.main.hc_templates:templates-add-update-hc-default' template_id=0 %}"><i class="ri-add-line align-bottom me-1"></i> Create New Template</a>
+                                                    </div>
+                                                </div>
+                                                <!--end col-->
+                                            </div>
+                                            <!--end row-->
+                                        </form>
+                                    </div>
+    
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="table-responsive table-card mb-1">
+                                                <table class="table table-nowrap align-middle bes-datatable" id="templatesTable">
+                                                    <thead class="text-muted table-light">
+                                                        <tr class="text-uppercase">
+                                                            <th class="text-center">SR NO</th>
+                                                            <th class="text-center">Action</th>
+                                                            <th class="text-center">Name</th>
+                                                            <th class="text-center">Template Type</th>
+                                                            <th class="text-center">Status</th>
+                                                            <th class="text-center">Trigger Time (Mins)</th>
+                                                            <th class="text-center">Created</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="list form-check-all">
+                                                        {% for hc_template in hc_templates %}
+                                                            <tr>
+                                                                <td class="text-center">{{ forloop.counter }}</td>
+                                                                <td class="text-center">
+                                                                    <ul class="list-inline hstack gap-2 mb-0">
+                                                                        <li class="list-inline-item edit m-auto" data-bs-toggle="tooltip"
+                                                                            data-bs-trigger="hover" data-bs-placement="top"
+                                                                            title="Edit">
+                                                                            <a href={% if hc_template.hc_template_type == 'hc_default' %} "{% url 'apps.main.hc_templates:templates-add-update-hc-default' template_id=hc_template.id %}"
+                                                                                    {% else %} hc_template.hc_template_type == 'hc_default' %} "{% url 'apps.main.hc_templates:templates-add-update-hc-default' template_id=hc_template.id %}" {% endif %}
+                                                                                class="text-primary d-inline-block edit-item-btn">
+                                                                                <i class="ri-pencil-fill fs-16"></i>
+                                                                            </a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </td>
+                                                                <td class="text-center">{{ hc_template.name }}</td>
+                                                                <td class="text-center">{{ hc_template.hc_template_type }}</td>
+                                                                <td class="text-center">
+                                                                    {% if hc_template.active == True %}<span class="badge badge-soft-success text-uppercase">Active</span>{% else %}<span class="badge badge-soft-danger text-uppercase">In-Active</span>{% endif %}
+                                                                </td>
+                                                                <td class="text-center">{{ hc_template.deviation_offset }}</td>
+                                                                <td class="text-center">{{ hc_template.created_at|date:'d-m-Y h:i A' }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {% comment %} {% include 'partials/no-results.html' with counts=hc_templates|length %} {% endcomment %}
+                                            
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+            
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->            
+                        
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_js %}
+<!-- list.js min js -->
+{% comment %} <script src="{% static 'libs/list.js/list.min.js'%}"></script> {% endcomment %}
+
+<!--list pagination js-->
+{% comment %} <script src="{% static 'libs/list.pagination.js/list.pagination.min.js'%}"></script> {% endcomment %}
+
+<!--datatable js-->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+    var oTable = $('#templatesTable').on( 'error.dt', function ( e, settings, techNote, message ) {
+        console.log( 'An error has been reported by DataTables: ', message );
+        $(".noresultContainer").show();
+    }).dataTable({
+        "ordering": false,
+        "searching": true,
+        "info": true,
+        "paging": true,
+        "dom": '<"top">rt<"bottom"lpi><"clear">',
+        "columns": [
+                    { 
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'center');
+                        }
+                    },
+                    {},
+                    {
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'center');
+                        }
+                    },
+                    {},
+                    {
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'center');
+                        }
+                    },
+                    {
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'center');
+                        }
+                    },
+                    {
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'center');
+                        }
+                    },
+                ],
+    });
+
+        $("#searchBox").on('keyup', function (){
+            oTable.fnFilter(this.value);
+        });
+        // Apply Select2 to the child select element
+        var tableLengthDropdown = document.querySelector('.dataTables_length select');
+        new Choices(tableLengthDropdown,{ searchEnabled: false });
+
+    });
+</script>
+
+{% endblock extra_js %}

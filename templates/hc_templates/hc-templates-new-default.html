@@ -1,0 +1,561 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Template{% endblock title %}
+{% block extra_css %}
+<link href="{% static 'select2/select2.css'%}" rel="stylesheet" type="text/css" />
+
+<style>
+    .select2-container .select2-search--inline .select2-search__field {
+        margin-top: 10px !important;
+        margin-left: 10px !important;
+    }
+    .select2-container .select2-selection--multiple .select2-selection__rendered {
+        padding: 0 !important;
+    }
+</style>
+
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Templates" title="HeadCount" %}
+                        {% endblock pagetitle %}
+
+                        {% block alerts %}
+                            {% include "partials/errors.html" with messages=messages %}
+                        {% endblock alerts %}
+    
+                        <div class="row">
+                            <div class="col-xl-9">
+
+                                <div class="card" id="database_card">
+                                    <div class="card-header border-1">
+                                        <div class="row align-items-center gy-3">
+                                            <div class="col-sm">
+                                                {% if hc_template and hc_template.id > 0 %}
+                                                    <h5 class="card-title mb-0">Template - {{ hc_template.name|default:"" }}</h5>
+                                                {% else %}
+                                                    <h5 class="card-title mb-0">New Template</h5>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body pt-3">
+                                        <form method="post" id="database_configuration_form" action="{% url 'apps.main.hc_templates:templates-add-update-hc-default' template_id=hc_template.id|default:'0' %}">
+                                            {% csrf_token %}
+
+                                            <span class="text-muted" style="display: block;">Default template are used where data to be displayed would be HeadCount(In, Out, Net). You can select multiple devices to configure. Please contact administration for any further help. <a href="https://blueerasoftech.com">Get in Touch</a></span>
+
+                                            <input type="hidden" class="form-control" name="id" id="template_id" value="{{ hc_template.id|default:'0' }}" placeholder="">
+
+                                            <div class="mt-4 row">
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="name" class="form-label">Name</label>
+                                                    <input type="text" class="form-control" name="name" id="hc_template_name" value="{{ hc_template.name|default:"" }}" placeholder="Name of Template">
+                                                </div>
+
+                                                <div id="deviation_offset_div" class="col-xxl-6 col-md-6">
+                                                    <label for="deviation_offset" class="form-label">Trigger interval (Secs)</label>
+                                                    <input type="text" class="form-control" name="deviation_offset" id="deviation_offset" value="{{ hc_template.deviation_offset|default:'60' }}" placeholder="60">
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3 row">
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="inDevicesList" class="form-label" >Select In Device(s)</label>
+                                                    
+                                                    <select class="form-control" multiple="multiple" name="in_devices" id="inDevicesList">
+                                                        {% for device in devices %}
+                                                            <option value="{{ device.MID }}" {% if device.MID|stringformat:"s" in selected_in_devices_ids %} selected {% endif %}>{{ device.NAME }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="outDevicesList" class="form-label" >Select Out Device(s)</label>
+                                                    <select class="form-control" multiple="multiple" name="out_devices" id="outDevicesList">
+                                                        {% for device in devices %}
+                                                            <option value="{{ device.MID }}" {% if device.MID|stringformat:"s" in selected_out_devices_ids %} selected {% endif %}>{{ device.NAME }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+
+
+
+                                            
+                                            
+
+
+                                            <div class="mt-3 row">
+                                                {% if organizations and organizations|length > 0 %}
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="organization_code" class="form-label" >Select Main Organization</label>
+                                                        <select class="form-control" name="organization_code" id="organizationList">
+                                                            <option value="" {% if hc_template.organization_code is None or hc_template.organization_code == '' %} selected {% endif %}>Select</option>
+                                                            {% for organization in organizations %}
+                                                                <option value="{{ organization.ORGCODE }}" {% if hc_template.organization_code is not None and organization.ORGCODE|stringformat:"s" == hc_template.organization_code %} selected {% endif %}>{{ organization.Name }} ({{ organization.ORGCODE }})</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                {% endif %}
+
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="contractors_group_display_label" class="form-label">Contractors Display Label (For group of contractors)</label>
+                                                    <input type="text" class="form-control" name="contractors_group_display_label" id="contractors_group_display_label" value="{{ hc_template.contractors_group_display_label|default:"" }}" placeholder="Contractors group display">
+                                                </div>
+                                            </div>
+
+
+
+                                            {% comment %} Start of BLOCK 1 {% endcomment %}
+                                            <hr class="custom" style="margin-top: 30px; padding-top: 10px;">
+
+                                            <h5 class="card-title mb-0">Display Block 1</h5>
+
+                                            <div class="mt-3 row">
+
+                                                <div class="col-xxl-12 col-md-12">
+                                                    <div class="col-xxl-6 col-md-6 form-check form-switch form-switch-success">
+                                                        <input class="form-check-input" type="checkbox" role="switch" id="is_block_1_team_enabled" name="is_block_1_team_enabled" {% if hc_template.is_block_1_team_enabled == True %}checked{% endif %}>
+                                                        <label class="form-check-label" for="is_block_1_team_enabled">Enable</label>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            <div id="block_1_elements" style="{% if hc_template.is_block_1_team_enabled == False %} display:none; {% endif %}">
+
+                                                <div class="mt-3 row">
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="block_1_label_field" class="form-label">Title</label>
+                                                        <input type="text" class="form-control" name="block_1_label_field" id="block_1_label_field" value="{{ hc_template.block_1_label_field }}" placeholder="">
+                                                    </div>
+
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="block_1_phone_field" class="form-label" >Select phone number field to be displayed</label>
+                                                        <select class="form-control" name="block_1_phone_field" id="block_1_phone_field" data-choices data-choices-search-false>
+                                                            <option value="PersPhone" {% if hc_template.block_1_phone_field == 'PersPhone' %} selected {% endif %}>Personal Phone</option>
+                                                            <option value="PersMobile" {% if hc_template.block_1_phone_field == 'PersMobile' %} selected {% endif %}>Personal Mobile</option>
+                                                            <option value="OfficePhone" {% if hc_template.block_1_phone_field == 'OfficePhone' %} selected {% endif %}>Office Phone</option>
+                                                            <option value="OfficeMobile" {% if hc_template.block_1_phone_field == 'OfficeMobile' %} selected {% endif %}>Office Mobile</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-3 row">
+
+                                                    <div class="col-xxl-4 col-md-4" id='div_block_1_custom_group_type'>
+                                                        <label for="block_1_custom_group_type" class="form-label" >Select from:</label>
+                                                        <select class="form-control" name="block_1_custom_group_type" id="block_1_custom_group_type" data-choices data-choices-search-false>
+                                                            {% for id, value in custom_group_type %}
+                                                                <option value="{{ id }}" {% if hc_template.block_1_custom_group_type is not None and hc_template.block_1_custom_group_type == id %} selected {% endif %}>{{ value }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+
+                                                    {% if customGroups1 and customGroups1|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_1_custom_group_1' style="{% if hc_template and hc_template.block_1_custom_group_type == 'custom_group_1' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_1_custom_group_1" class="form-label" style="color: #FFF !important">Custom Group 1</label>
+                                                            <select class="form-control " name="block_1_custom_group_1" id="block_1_custom_group_1" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_1_custom_group_1_id is None or hc_template.block_1_custom_group_1_id == '0' %} selected {% endif %}>Select Custom Group 1</option>
+                                                                {% for customGroup1 in customGroups1 %}
+                                                                    <option value="{{ customGroup1.CG1ID|stringformat:"s" }}" {% if hc_template.block_1_custom_group_1_id is not None and customGroup1.CG1ID|stringformat:"s" == hc_template.block_1_custom_group_1_id|stringformat:"s" %} selected {% endif %}>{{ customGroup1.Name|default:'-' }} ({{ customGroup1.CG1CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if customGroups2 and customGroups2|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_1_custom_group_2'  style="{% if hc_template and hc_template.block_1_custom_group_type == 'custom_group_2' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_1_custom_group_2" class="form-label"  style="color: #FFF !important">Custom Group 2</label>
+                                                            <select class="form-control" name="block_1_custom_group_2" id="block_1_custom_group_2" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_1_custom_group_2_id is None or hc_template.block_1_custom_group_2_id == '0' %} selected {% endif %}>Select Custom Group 2</option>
+                                                                {% for customGroup2 in customGroups2 %}
+                                                                    <option value="{{ customGroup2.CG2ID|stringformat:"s" }}" {% if hc_template.block_1_custom_group_2_id is not None and customGroup2.CG2ID|stringformat:"s" == hc_template.block_1_custom_group_2_id|stringformat:"s" %} selected {% endif %}>{{ customGroup2.Name|default:'-' }} ({{ customGroup2.CG2CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if customGroups3 and customGroups3|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_1_custom_group_3'  style="{% if hc_template and hc_template.block_1_custom_group_type == 'custom_group_3' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_1_custom_group_3" class="form-label"  style="color: #FFF !important">Custom Group 3</label>
+                                                            <select class="form-control" name="block_1_custom_group_3" id="block_1_custom_group_3" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_1_custom_group_3_id is None or hc_template.block_1_custom_group_3_id == '0' %} selected {% endif %}>Select Custom Group 3</option>
+                                                                {% for customGroup3 in customGroups3 %}
+                                                                    <option value="{{ customGroup3.CG3ID|stringformat:"s" }}" {% if hc_template.block_1_custom_group_3_id is not None and customGroup3.CG3ID|stringformat:"s" == hc_template.block_1_custom_group_3_id|stringformat:"s" %} selected {% endif %}>{{ customGroup3.Name|default:'-' }} ({{ customGroup3.CG3CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% comment %} End of BLOCK 1 {% endcomment %}
+
+
+
+
+
+
+
+                                            {% comment %} Start of Block_2 {% endcomment %}
+                                            <hr class="custom" style="margin-top: 30px; padding-top: 10px;">
+
+                                            <h5 class="card-title mb-0">Display Block 2</h5>
+
+                                            <div class="mt-3 row">
+
+                                                <div class="col-xxl-12 col-md-12">
+                                                    <div class="col-xxl-6 col-md-6 form-check form-switch form-switch-success">
+                                                        <input class="form-check-input" type="checkbox" role="switch" id="is_block_2_team_enabled" name="is_block_2_team_enabled" {% if hc_template.is_block_2_team_enabled == True %}checked{% endif %}>
+                                                        <label class="form-check-label" for="is_block_2_team_enabled">Enable</label>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            <div id="block_2_elements" style="{% if hc_template.is_block_2_team_enabled == False %} display:none; {% endif %}">
+
+                                                <div class="mt-3 row">
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="block_2_label_field" class="form-label">Title</label>
+                                                        <input type="text" class="form-control" name="block_2_label_field" id="block_2_label_field" value="{{ hc_template.block_2_label_field }}" placeholder="">
+                                                    </div>
+
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="block_2_phone_field" class="form-label" >Select phone number field to be displayed</label>
+                                                        <select class="form-control" name="block_2_phone_field" id="block_2_phone_field" data-choices data-choices-search-false>
+                                                            <option value="PersPhone" {% if hc_template.block_2_phone_field == 'PersPhone' %} selected {% endif %}>Personal Phone</option>
+                                                            <option value="PersMobile" {% if hc_template.block_2_phone_field == 'PersMobile' %} selected {% endif %}>Personal Mobile</option>
+                                                            <option value="OfficePhone" {% if hc_template.block_2_phone_field == 'OfficePhone' %} selected {% endif %}>Office Phone</option>
+                                                            <option value="OfficeMobile" {% if hc_template.block_2_phone_field == 'OfficeMobile' %} selected {% endif %}>Office Mobile</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-3 row">
+
+                                                    <div class="col-xxl-4 col-md-4" id='div_block_2_custom_group_type'>
+                                                        <label for="block_2_custom_group_type" class="form-label" >Select from:</label>
+                                                        <select class="form-control" name="block_2_custom_group_type" id="block_2_custom_group_type" data-choices data-choices-search-false>
+                                                            {% for id, value in custom_group_type %}
+                                                                <option value="{{ id }}" {% if hc_template.block_2_custom_group_type is not None and hc_template.block_2_custom_group_type == id %} selected {% endif %}>{{ value }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+
+                                                    {% if customGroups1 and customGroups1|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_2_custom_group_1' style="{% if hc_template and hc_template.block_2_custom_group_type == 'custom_group_1' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_2_custom_group_1" class="form-label" style="color: #FFF !important">Custom Group 1</label>
+                                                            <select class="form-control " name="block_2_custom_group_1" id="block_2_custom_group_1" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_2_custom_group_1_id is None or hc_template.block_2_custom_group_1_id == '0' %} selected {% endif %}>Select Custom Group 1</option>
+                                                                {% for customGroup1 in customGroups1 %}
+                                                                    <option value="{{ customGroup1.CG1ID|stringformat:"s" }}" {% if hc_template.block_2_custom_group_1_id is not None and customGroup1.CG1ID|stringformat:"s" == hc_template.block_2_custom_group_1_id|stringformat:"s" %} selected {% endif %}>{{ customGroup1.Name|default:'-' }} ({{ customGroup1.CG1CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if customGroups2 and customGroups2|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_2_custom_group_2'  style="{% if hc_template and hc_template.block_2_custom_group_type == 'custom_group_2' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_2_custom_group_2" class="form-label"  style="color: #FFF !important">Custom Group 2</label>
+                                                            <select class="form-control" name="block_2_custom_group_2" id="block_2_custom_group_2" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_2_custom_group_2_id is None or hc_template.block_2_custom_group_2_id == '0' %} selected {% endif %}>Select Custom Group 2</option>
+                                                                {% for customGroup2 in customGroups2 %}
+                                                                    <option value="{{ customGroup2.CG2ID|stringformat:"s" }}" {% if hc_template.block_2_custom_group_2_id is not None and customGroup2.CG2ID|stringformat:"s" == hc_template.block_2_custom_group_2_id|stringformat:"s" %} selected {% endif %}>{{ customGroup2.Name|default:'-' }} ({{ customGroup2.CG2CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if customGroups3 and customGroups3|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_2_custom_group_3'  style="{% if hc_template and hc_template.block_2_custom_group_type == 'custom_group_3' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_2_custom_group_3" class="form-label"  style="color: #FFF !important">Custom Group 3</label>
+                                                            <select class="form-control" name="block_2_custom_group_3" id="block_2_custom_group_3" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_2_custom_group_3_id is None or hc_template.block_2_custom_group_3_id == '0' %} selected {% endif %}>Select Custom Group 3</option>
+                                                                {% for customGroup3 in customGroups3 %}
+                                                                    <option value="{{ customGroup3.CG3ID|stringformat:"s" }}" {% if hc_template.block_2_custom_group_3_id is not None and customGroup3.CG3ID|stringformat:"s" == hc_template.block_2_custom_group_3_id|stringformat:"s" %} selected {% endif %}>{{ customGroup3.Name|default:'-' }} ({{ customGroup3.CG3CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% comment %} End of Block_2 {% endcomment %}
+
+
+
+
+
+
+
+
+                                            {% comment %} Start of BLOCK 3 {% endcomment %}
+                                            <hr class="custom" style="margin-top: 30px; padding-top: 10px;">
+
+                                            <h5 class="card-title mb-0">Display Block 3</h5>
+
+                                            <div class="mt-3 row">
+
+                                                <div class="col-xxl-12 col-md-12">
+                                                    <div class="col-xxl-6 col-md-6 form-check form-switch form-switch-success">
+                                                        <input class="form-check-input" type="checkbox" role="switch" id="is_block_3_team_enabled" name="is_block_3_team_enabled" {% if hc_template.is_block_3_team_enabled == True %}checked{% endif %}>
+                                                        <label class="form-check-label" for="is_block_3_team_enabled">Enable</label>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            <div id="block_3_elements" style="{% if hc_template.is_block_3_team_enabled == False %} display:none; {% endif %}">
+
+                                                <div class="mt-3 row">
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="block_3_label_field" class="form-label">Title</label>
+                                                        <input type="text" class="form-control" name="block_3_label_field" id="block_3_label_field" value="{{ hc_template.block_3_label_field }}" placeholder="">
+                                                    </div>
+
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="block_3_phone_field" class="form-label" >Select phone number field to be displayed</label>
+                                                        <select class="form-control" name="block_3_phone_field" id="block_3_phone_field" data-choices data-choices-search-false>
+                                                            <option value="PersPhone" {% if hc_template.block_3_phone_field == 'PersPhone' %} selected {% endif %}>Personal Phone</option>
+                                                            <option value="PersMobile" {% if hc_template.block_3_phone_field == 'PersMobile' %} selected {% endif %}>Personal Mobile</option>
+                                                            <option value="OfficePhone" {% if hc_template.block_3_phone_field == 'OfficePhone' %} selected {% endif %}>Office Phone</option>
+                                                            <option value="OfficeMobile" {% if hc_template.block_3_phone_field == 'OfficeMobile' %} selected {% endif %}>Office Mobile</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-3 row">
+
+                                                    <div class="col-xxl-4 col-md-4" id='div_block_3_custom_group_type'>
+                                                        <label for="block_3_custom_group_type" class="form-label" >Select from:</label>
+                                                        <select class="form-control" name="block_3_custom_group_type" id="block_3_custom_group_type" data-choices data-choices-search-false>
+                                                            {% for id, value in custom_group_type %}
+                                                                <option value="{{ id }}" {% if hc_template.block_3_custom_group_type is not None and hc_template.block_3_custom_group_type == id %} selected {% endif %}>{{ value }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+
+                                                    {% if customGroups1 and customGroups1|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_3_custom_group_1' style="{% if hc_template and hc_template.block_3_custom_group_type == 'custom_group_1' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_3_custom_group_1" class="form-label" style="color: #FFF !important">Custom Group 1</label>
+                                                            <select class="form-control " name="block_3_custom_group_1" id="block_3_custom_group_1" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_3_custom_group_1_id is None or hc_template.block_3_custom_group_1_id == '0' %} selected {% endif %}>Select Custom Group 1</option>
+                                                                {% for customGroup1 in customGroups1 %}
+                                                                    <option value="{{ customGroup1.CG1ID|stringformat:"s" }}" {% if hc_template.block_3_custom_group_1_id is not None and customGroup1.CG1ID|stringformat:"s" == hc_template.block_3_custom_group_1_id|stringformat:"s" %} selected {% endif %}>{{ customGroup1.Name|default:'-' }} ({{ customGroup1.CG1CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if customGroups2 and customGroups2|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_3_custom_group_2'  style="{% if hc_template and hc_template.block_3_custom_group_type == 'custom_group_2' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_3_custom_group_2" class="form-label"  style="color: #FFF !important">Custom Group 2</label>
+                                                            <select class="form-control" name="block_3_custom_group_2" id="block_3_custom_group_2" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_3_custom_group_2_id is None or hc_template.block_3_custom_group_2_id == '0' %} selected {% endif %}>Select Custom Group 2</option>
+                                                                {% for customGroup2 in customGroups2 %}
+                                                                    <option value="{{ customGroup2.CG2ID|stringformat:"s" }}" {% if hc_template.block_3_custom_group_2_id is not None and customGroup2.CG2ID|stringformat:"s" == hc_template.block_3_custom_group_2_id|stringformat:"s" %} selected {% endif %}>{{ customGroup2.Name|default:'-' }} ({{ customGroup2.CG2CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if customGroups3 and customGroups3|length > 0 %}
+                                                        <div class="col-xxl-4 col-md-4" id='div_block_3_custom_group_3'  style="{% if hc_template and hc_template.block_3_custom_group_type == 'custom_group_3' %} display: block; {% else %} display: none; {% endif %}">
+                                                            <label for="block_3_custom_group_3" class="form-label"  style="color: #FFF !important">Custom Group 3</label>
+                                                            <select class="form-control" name="block_3_custom_group_3" id="block_3_custom_group_3" data-choices data-choices-search-false data-choices-removeItem>
+                                                                <option value="" {% if hc_template.block_3_custom_group_3_id is None or hc_template.block_3_custom_group_3_id == '0' %} selected {% endif %}>Select Custom Group 3</option>
+                                                                {% for customGroup3 in customGroups3 %}
+                                                                    <option value="{{ customGroup3.CG3ID|stringformat:"s" }}" {% if hc_template.block_3_custom_group_3_id is not None and customGroup3.CG3ID|stringformat:"s" == hc_template.block_3_custom_group_3_id|stringformat:"s" %} selected {% endif %}>{{ customGroup3.Name|default:'-' }} ({{ customGroup3.CG3CODE|default:'' }})</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% comment %} End of BLOCK 3 {% endcomment %}
+
+
+
+
+
+
+
+
+
+
+
+                                            <hr class="custom" style="margin-top: 30px; padding-top: 10px;">
+
+
+                                            <div class="mt-3 col-xxl-6 col-md-6 form-check form-switch form-switch-success">
+                                                <input class="form-check-input" type="checkbox" role="switch" id="enableTemplate" name="active" {% if hc_template.active == True %}checked{% endif %}>
+                                                <label class="form-check-label" for="enableTemplate">Enable Template</label>
+                                            </div>
+                                            
+
+                                            <div class="col-sm-auto mt-4 mb-4">
+                                                <div class="gap-1 flex-wrap">
+                                                    <button type="submit" class="btn btn-success add-btn" data-bs-toggle="modal" id="db_submit_btn" data-bs-target="#showModal"><i class="ri-save-line align-bottom me-1"></i> Submit</button>
+                                                </div>
+                                            </div>
+
+                         
+                                        </form>
+
+                                    </div>
+
+                                </div>
+        
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->            
+                        
+                    
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'select2/select2.js'%}"></script>
+<script>
+    $('#inDevicesList').select2({
+        placeholder: "Select In Device(s)",
+     });
+
+     $('#outDevicesList').select2({
+        placeholder: "Select Out Device(s)",
+     });
+
+
+
+
+     $('#organizationList').select2({
+        placeholder: "Select main organization",
+     });
+
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkboxBlock_1 = document.getElementById("is_block_1_team_enabled");
+        const divBlock_1 = document.getElementById("block_1_elements");
+        const selectBlock_1Element = document.getElementById('block_1_custom_group_type');
+        const divBlock_1Group1 = document.getElementById('div_block_1_custom_group_1');
+        const divBlock_1Group2 = document.getElementById('div_block_1_custom_group_2');
+        const divBlock_1Group3 = document.getElementById('div_block_1_custom_group_3');
+
+        checkboxBlock_1.addEventListener("change", function() {
+            if (checkboxBlock_1.checked) {
+                divBlock_1.style.display = "block";
+            } else {
+                divBlock_1.style.display = "none";
+            }
+        });
+
+        selectBlock_1Element.addEventListener('change', (event) => {
+            const selectedValue = event.target.value;
+            divBlock_1Group1.style.display = 'none';
+            divBlock_1Group2.style.display = 'none';
+            divBlock_1Group3.style.display = 'none';
+            
+            // Show the relevant div based on the selected option
+            if (selectedValue == 'custom_group_1') {
+                divBlock_1Group1.style.display = 'block';
+            } else if (selectedValue == 'custom_group_2') {
+                divBlock_1Group2.style.display = 'block';
+            } else if (selectedValue == 'custom_group_3') {
+                divBlock_1Group3.style.display = 'block';
+            }
+        });
+    });
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkboxBlock_2 = document.getElementById("is_block_2_team_enabled");
+        const divBlock_2 = document.getElementById("block_2_elements");
+
+        const selectBlock_2Element = document.getElementById('block_2_custom_group_type');
+        const divBlock_2Group1 = document.getElementById('div_block_2_custom_group_1');
+        const divBlock_2Group2 = document.getElementById('div_block_2_custom_group_2');
+        const divBlock_2Group3 = document.getElementById('div_block_2_custom_group_3');
+
+        checkboxBlock_2.addEventListener("change", function() {
+            if (checkboxBlock_2.checked) {
+                divBlock_2.style.display = "block";
+            } else {
+                divBlock_2.style.display = "none";
+            }
+        });
+
+
+        selectBlock_2Element.addEventListener('change', (event) => {
+            const selectedValue = event.target.value;
+            divBlock_2Group1.style.display = 'none';
+            divBlock_2Group2.style.display = 'none';
+            divBlock_2Group3.style.display = 'none';
+            
+            // Show the relevant div based on the selected option
+            if (selectedValue == 'custom_group_1') {
+                divBlock_2Group1.style.display = 'block';
+            } else if (selectedValue == 'custom_group_2') {
+                divBlock_2Group2.style.display = 'block';
+            } else if (selectedValue == 'custom_group_3') {
+                divBlock_2Group3.style.display = 'block';
+            }
+        });
+    });
+
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkboxBlock_3 = document.getElementById("is_block_3_team_enabled");
+        const divBlock_3 = document.getElementById("block_3_elements");
+
+        const selectBlock_3Element = document.getElementById('block_3_custom_group_type');
+        const divBlock_3Group1 = document.getElementById('div_block_3_custom_group_1');
+        const divBlock_3Group2 = document.getElementById('div_block_3_custom_group_2');
+        const divBlock_3Group3 = document.getElementById('div_block_3_custom_group_3');
+
+        checkboxBlock_3.addEventListener("change", function() {
+            if (checkboxBlock_3.checked) {
+                divBlock_3.style.display = "block";
+            } else {
+                divBlock_3.style.display = "none";
+            }
+        });
+
+        selectBlock_3Element.addEventListener('change', (event) => {
+            const selectedValue = event.target.value;
+            divBlock_3Group1.style.display = 'none';
+            divBlock_3Group2.style.display = 'none';
+            divBlock_3Group3.style.display = 'none';
+            
+            // Show the relevant div based on the selected option
+            if (selectedValue == 'custom_group_1') {
+                divBlock_3Group1.style.display = 'block';
+            } else if (selectedValue == 'custom_group_2') {
+                divBlock_3Group2.style.display = 'block';
+            } else if (selectedValue == 'custom_group_3') {
+                divBlock_3Group3.style.display = 'block';
+            }
+        });
+    });
+
+
+</script>
+{% endblock extra_js %}

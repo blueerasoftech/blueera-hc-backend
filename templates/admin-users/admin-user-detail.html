@@ -1,0 +1,167 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Admin User Detail{% endblock title %}
+{% block extra_css %}
+<link href="{% static 'select2/select2.css'%}" rel="stylesheet" type="text/css" />
+
+<style>
+    .select2-container .select2-search--inline .select2-search__field {
+        margin-top: 10px !important;
+        margin-left: 10px !important;
+    }
+    .select2-container .select2-selection--multiple .select2-selection__rendered {
+        padding: 0 !important;
+    }
+</style>
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Admin Users" title="Admin User Detail" %}
+                        {% endblock pagetitle %}
+
+                        {% block alerts %}
+                            {% include "partials/errors.html" with messages=messages %}
+                        {% endblock alerts %}
+    
+                        <div class="row">
+                            <div class="col-xl-9">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <form method="POST" id="user_detail_form" enctype="multipart/form-data" action="{% url 'apps.main.admin_users:admin-user-details-update' %}">
+                                            {% csrf_token %}
+
+                                            <input type="hidden" name="id" value="{{ admin_user_id }}">
+                                            
+                                            <div class="mt-3 row">
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="employee_id" class="form-label">Employee Id</label>
+                                                    <input type="text" class="form-control" name="employee_id" id="employee_id" value="{{ user.employee_id|default:"" }}">
+                                                </div>
+
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="role" class="form-label">Role Type</label>
+                                                    <select class="form-control" data-choices data-choices-search-false name="role_type" id="role_type">
+                                                        <option placeholder disabled>Select Role Type</option>
+                                                        {% for id, value in role_types %}
+                                                            <option value="{{ id }}" {% if user.role_type == id %} selected {% endif %}>{{ value }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                
+                                                </div>
+
+
+                                            </div>
+                                    
+                                            <div class="mt-3 row">
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="first_name" class="form-label">First Name</label>
+                                                    <input type="text" class="form-control" name="first_name" id="first_name" value="{{ user.first_name|default:"" }}">
+                                                </div>
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="last_name" class="form-label">Last Name</label>
+                                                    <input type="text" class="form-control" name="last_name" id="last_name" value="{{ user.last_name|default:"" }}">
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3 row">
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="email" class="form-label">Email</label>
+                                                    <input type="text" class="form-control" name="email" id="email" value="{{ user.email|default:"" }}">
+                                                </div>
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="mobile" class="form-label">Mobile</label>
+                                                    <input type="text" class="form-control" name="mobile" id="mobile" value="{{ user.mobile|default:"" }}">
+                                                </div>
+                                            </div>
+
+
+                                            {% if admin_user_id is None or admin_user_id == '0' or admin_user_id == '' %}
+                                                <div class="mt-3 row">
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="username" class="form-label">Username</label>
+                                                        <input type="text" class="form-control" name="username" id="username" value="{{ user.username|default:"" }}">
+                                                    </div>
+                                                    <div class="col-xxl-6 col-md-6">
+                                                        <label for="password" class="form-label">Password</label>
+                                                        <input type="password" class="form-control" name="password" id="password" value="{{ user.password|default:"" }}">
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+
+
+                                            <div class="mt-3 row">
+                                                <div class="col-xxl-12 col-md-12">
+                                                    <label for="templatesList" class="form-label" >Select Templates</label>
+                                                    <select class="form-control" multiple="multiple" name="templates" id="templatesList">
+                                                        {% for hcTemplate in hcTemplates %}
+                                                            <option value="{{ hcTemplate.id }}" {% if hcTemplate and hcTemplate.id in selected_templates_ids %} selected {% endif %}>{{ hcTemplate.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <span class='text-muted pt-1' style='position:relative; display: block'>If no templates selected then it will show all templates for managing Visitor Head Count</span>
+                                                </div>
+                                            </div>
+
+                                            
+                                            <div class="mt-3 col-xxl-6 col-md-6 form-check form-switch form-switch-success">
+                                                <input class="form-check-input" type="checkbox" role="switch" name="is_vms_assigned" id="is_vms_assigned" {% if user.is_vms_assigned == True %}checked{% endif %}>
+                                                <label class="form-check-label" for="is_vms_assigned">Allow VMS?</label>
+                                            </div>
+
+                                            <div class="mt-3 col-xxl-6 col-md-6 form-check form-switch form-switch-success">
+                                                <input class="form-check-input" type="checkbox" role="switch" name="is_active" id="is_active" {% if user.is_active == True %}checked{% endif %}>
+                                                <label class="form-check-label" for="is_active">Active</label>
+                                            </div>
+                                            
+
+                                            <div class="col-sm-auto mt-4">
+                                                <div class="gap-1 flex-wrap">
+                                                    <button type="submit" class="btn btn-success add-btn" id="profile_submit_btn"><i class="ri-save-line align-bottom me-1"></i> Submit</button>
+                                                    {% if admin_user_id is not None and admin_user_id != '0' and admin_user_id != '' %}
+                                                        <a type="button" href="{% url 'apps.main.admin_users:admin-users-change-password' admin_user_id=user.id %}" class="btn btn-warning btn-label right ms-auto nexttab nexttab" style="margin-left: 20px !important" data-nexttab="pills-info-desc-tab"><i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Change Password</a>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="mt-3">
+                                                    <span class="submit_profile_form_status"></span>
+                                                </div>
+                                            </div>
+                                            
+                                        </form>
+                                    </div>
+                                </div><!--end card-->
+                                
+                            </div><!--end col-->
+                            
+                        </div><!--end row-->
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_js %}
+
+<script src="{% static 'select2/select2.js'%}"></script>
+
+<script>
+//Script for logo upload and preview
+    
+    $('#templatesList').select2({
+        placeholder: "All",
+     });
+
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,174 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Templates List{% endblock title %}
+{% block extra_css %}
+<!--datatable css-->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% comment %} {% include "partials/page-title.html" with pagetitle="Visitor Head Count" title="Templates" %} {% endcomment %}
+                        {% endblock pagetitle %}
+
+                        {% block alerts %}
+                            {% include "partials/errors.html" with messages=messages %}
+                        {% endblock alerts %}
+    
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card" id="orderList">
+                                    {% comment %} <div class="card-header border-1">
+                                        <div class="row align-items-center gy-3">
+                                            <div class="col-sm">
+                                                <h5 class="card-title mb-0">Select Template</h5>
+                                            </div>
+                                            
+                                        </div>
+                                    </div> {% endcomment %}
+                                    <div class="card-body border border-0 border-end-0 border-start-0">
+                                        <form>
+                                            <div class="row g-3">
+                                                <div class="col-5">
+                                                    <div class="search-box">
+                                                        <input type="text" id="searchBox" class="form-control search"
+                                                            placeholder="Search...">
+                                                        <i class="ri-search-line search-icon"></i>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-sm-auto" style="margin-left:auto;">
+                                                    <div class="d-flex gap-1 flex-wrap">
+                                                        {% comment %} {% if role_type != 'hc_security' %}
+                                                            <a type="button" class="btn btn-success add-btn" id="create-template-btn" href="{% url 'apps.main.hc_templates:templates-add-update-hc-default' template_id=0 %}"><i class="ri-add-line align-bottom me-1"></i> Create New Template</a>
+                                                        {% endif %} {% endcomment %}
+                                                    </div>
+                                                </div>
+                                                <!--end col-->
+                                            </div>
+                                            <!--end row-->
+                                        </form>
+                                    </div>
+    
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="table-responsive table-card mb-1">
+                                                <table class="table table-nowrap align-middle bes-datatable" id="templatesTable">
+                                                    <thead class="text-muted table-light">
+                                                        <tr class="text-uppercase">
+                                                            <th class="text-center">SR NO</th>
+                                                            <th class="text-left">Template Name</th>
+                                                            <th class="text-left">Visitor Head Count</th>
+                                                            <th class="text-center">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="list form-check-all">
+                                                        {% for hcRecord in hcRecords %}
+                                                            <tr>
+                                                                <td class="text-center">{{ forloop.counter }}</td>
+                                                                <td class="text-left">{{ hcRecord.hc_template.name }}</td>
+                                                                <td class="text-center">{{ hcRecord.in_count_visitor|default:'0' }}</td>
+                                                                <td class="text-center">
+                                                                    <ul class="list-inline hstack gap-2 mb-0">
+                                                                        <li class="list-inline-item edit m-auto" data-bs-toggle="tooltip"
+                                                                            data-bs-trigger="hover" data-bs-placement="top"
+                                                                            title="Manage Visitors">
+                                                                            <a href="{% url 'apps.main.vms:vms' template_id=hcRecord.hc_template.id %}" class="btn btn-success btn-label right ms-auto nexttab nexttab" data-nexttab="pills-experience-tab"><i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Manage Visitors</a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {% comment %} {% include 'partials/no-results.html' with counts=hcRecords|length %} {% endcomment %}
+                                            
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+            
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->            
+                        
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_js %}
+<!-- list.js min js -->
+{% comment %} <script src="{% static 'libs/list.js/list.min.js'%}"></script> {% endcomment %}
+
+<!--list pagination js-->
+{% comment %} <script src="{% static 'libs/list.pagination.js/list.pagination.min.js'%}"></script> {% endcomment %}
+
+<!--datatable js-->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+    var oTable = $('#templatesTable').on( 'error.dt', function ( e, settings, techNote, message ) {
+        console.log( 'An error has been reported by DataTables: ', message );
+        $(".noresultContainer").show();
+    }).dataTable({
+        "ordering": false,
+        "searching": true,
+        "info": true,
+        "paging": true,
+        "dom": '<"top">rt<"bottom"lpi><"clear">',
+        "columns": [
+                    { 
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'center');
+                        }
+                    },
+                    {
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'left');
+                        }
+                    },
+                    {
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'left');
+                        }
+                    },
+                    {
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).css('text-align', 'center');
+                        }
+                    }
+                ],
+    });
+
+        $("#searchBox").on('keyup', function (){
+            oTable.fnFilter(this.value);
+        });
+        // Apply Select2 to the child select element
+        var tableLengthDropdown = document.querySelector('.dataTables_length select');
+        new Choices(tableLengthDropdown,{ searchEnabled: false });
+
+    });
+</script>
+
+{% endblock extra_js %}
